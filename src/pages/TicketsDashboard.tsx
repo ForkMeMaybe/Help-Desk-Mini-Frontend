@@ -1,21 +1,24 @@
-import { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { toast } from 'react-toastify';
-import apiClient from '../api/client';
-import Layout from '../components/Layout';
-import { Plus, Search, AlertCircle, ChevronLeft, ChevronRight, User, Calendar } from 'lucide-react';
+import { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
+import apiClient from "../api/client";
+import Layout from "../components/Layout";
+import {
+  Plus,
+  Search,
+  AlertCircle,
+  ChevronLeft,
+  ChevronRight,
+  User,
+  Calendar,
+} from "lucide-react";
 
 interface Ticket {
   id: number;
   title: string;
   status: string;
   priority: string;
-  assigned_agent: {
-    id: number;
-    email: string;
-    first_name: string;
-    last_name: string;
-  } | null;
+  assigned_to: string | null;
   created_at: string;
   is_breached: boolean;
 }
@@ -23,9 +26,9 @@ interface Ticket {
 const TicketsDashboard = () => {
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('');
-  const [priorityFilter, setPriorityFilter] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
+  const [priorityFilter, setPriorityFilter] = useState("");
   const [showBreachedOnly, setShowBreachedOnly] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [hasNext, setHasNext] = useState(false);
@@ -49,57 +52,57 @@ const TicketsDashboard = () => {
 
       if (statusFilter) params.status = statusFilter;
       if (priorityFilter) params.priority = priorityFilter;
-      if (showBreachedOnly) params.is_breached = 'true';
+      if (showBreachedOnly) params.is_breached = "true";
 
-      const response = await apiClient.get('/api/tickets/', { params });
+      const response = await apiClient.get("/api/tickets/", { params });
       setTickets(response.data.results);
       setHasNext(!!response.data.next);
       setHasPrevious(!!response.data.previous);
     } catch (error) {
-      console.error('Failed to fetch tickets:', error);
-      toast.error('Failed to load tickets');
+      console.error("Failed to fetch tickets:", error);
+      toast.error("Failed to load tickets");
     } finally {
       setLoading(false);
     }
   };
 
   const filteredTickets = tickets.filter((ticket) =>
-    ticket.title.toLowerCase().includes(searchTerm.toLowerCase())
+    ticket.title.toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
   const getPriorityColor = (priority: string) => {
     switch (priority.toLowerCase()) {
-      case 'critical':
-        return 'bg-red-100 text-red-700 border-red-200';
-      case 'high':
-        return 'bg-orange-100 text-orange-700 border-orange-200';
-      case 'medium':
-        return 'bg-yellow-100 text-yellow-700 border-yellow-200';
-      case 'low':
-        return 'bg-green-100 text-green-700 border-green-200';
+      case "critical":
+        return "bg-red-100 text-red-700 border-red-200";
+      case "high":
+        return "bg-orange-100 text-orange-700 border-orange-200";
+      case "medium":
+        return "bg-yellow-100 text-yellow-700 border-yellow-200";
+      case "low":
+        return "bg-green-100 text-green-700 border-green-200";
       default:
-        return 'bg-gray-100 text-gray-700 border-gray-200';
+        return "bg-gray-100 text-gray-700 border-gray-200";
     }
   };
 
   const getStatusColor = (status: string) => {
-    switch (status.toLowerCase().replace(' ', '_')) {
-      case 'open':
-        return 'bg-blue-100 text-blue-700 border-blue-200';
-      case 'in_progress':
-      case 'in progress':
-        return 'bg-purple-100 text-purple-700 border-purple-200';
-      case 'resolved':
-        return 'bg-emerald-100 text-emerald-700 border-emerald-200';
-      case 'closed':
-        return 'bg-gray-100 text-gray-700 border-gray-200';
+    switch (status.toLowerCase().replace(" ", "_")) {
+      case "open":
+        return "bg-blue-100 text-blue-700 border-blue-200";
+      case "in_progress":
+      case "in progress":
+        return "bg-purple-100 text-purple-700 border-purple-200";
+      case "resolved":
+        return "bg-emerald-100 text-emerald-700 border-emerald-200";
+      case "closed":
+        return "bg-gray-100 text-gray-700 border-gray-200";
       default:
-        return 'bg-gray-100 text-gray-700 border-gray-200';
+        return "bg-gray-100 text-gray-700 border-gray-200";
     }
   };
 
   const formatStatus = (status: string) => {
-    return status.replace('_', ' ').replace(/\b\w/g, (l) => l.toUpperCase());
+    return status.replace("_", " ").replace(/\b\w/g, (l) => l.toUpperCase());
   };
 
   return (
@@ -222,10 +225,14 @@ const TicketsDashboard = () => {
                     </div>
 
                     <div className="flex flex-wrap gap-2">
-                      <span className={`px-2.5 py-1 text-xs font-semibold rounded-full border ${getStatusColor(ticket.status)}`}>
+                      <span
+                        className={`px-2.5 py-1 text-xs font-semibold rounded-full border ${getStatusColor(ticket.status)}`}
+                      >
                         {formatStatus(ticket.status)}
                       </span>
-                      <span className={`px-2.5 py-1 text-xs font-semibold rounded-full border ${getPriorityColor(ticket.priority)}`}>
+                      <span
+                        className={`px-2.5 py-1 text-xs font-semibold rounded-full border ${getPriorityColor(ticket.priority)}`}
+                      >
                         {ticket.priority}
                       </span>
                       {ticket.is_breached && (
@@ -240,14 +247,16 @@ const TicketsDashboard = () => {
                       <div className="flex items-center space-x-2">
                         <User className="h-4 w-4 text-gray-400" />
                         <span>
-                          {ticket.assigned_agent
-                            ? `${ticket.assigned_agent.first_name} ${ticket.assigned_agent.last_name}`
-                            : 'Unassigned'}
+                          {ticket.assigned_to
+                            ? `${ticket.assigned_to}`
+                            : "Unassigned"}
                         </span>
                       </div>
                       <div className="flex items-center space-x-2">
                         <Calendar className="h-4 w-4 text-gray-400" />
-                        <span>{new Date(ticket.created_at).toLocaleDateString()}</span>
+                        <span>
+                          {new Date(ticket.created_at).toLocaleDateString()}
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -265,7 +274,9 @@ const TicketsDashboard = () => {
                 <span>Previous</span>
               </button>
 
-              <span className="text-sm text-gray-700 font-medium">Page {currentPage}</span>
+              <span className="text-sm text-gray-700 font-medium">
+                Page {currentPage}
+              </span>
 
               <button
                 onClick={() => setCurrentPage((prev) => prev + 1)}
