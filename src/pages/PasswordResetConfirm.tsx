@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import apiClient from '../api/client';
+import apiClient, { generateIdempotencyKey } from '../api/client';
 import { Ticket, Lock, ArrowLeft } from 'lucide-react';
 
 const PasswordResetConfirm = () => {
@@ -10,6 +10,7 @@ const PasswordResetConfirm = () => {
   const [loading, setLoading] = useState(false);
   const { uid, token } = useParams<{ uid: string; token: string }>();
   const navigate = useNavigate();
+  const [pwConfirmKey] = useState(() => generateIdempotencyKey());
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -27,11 +28,15 @@ const PasswordResetConfirm = () => {
     setLoading(true);
 
     try {
-      await apiClient.post('/auth/users/reset_password_confirm/', {
-        uid,
-        token,
-        new_password: newPassword,
-      });
+      await apiClient.post(
+        '/auth/users/reset_password_confirm/',
+        {
+          uid,
+          token,
+          new_password: newPassword,
+        },
+        { idempotencyKey: pwConfirmKey }
+      );
       toast.success('Password reset successful! Please login with your new password.');
       navigate('/login');
     } catch (error: any) {

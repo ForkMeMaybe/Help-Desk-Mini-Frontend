@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import apiClient from '../api/client';
+import apiClient, { generateIdempotencyKey } from '../api/client';
 
 interface User {
   id: number;
@@ -48,10 +48,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const login = async (email: string, password: string) => {
-    const response = await apiClient.post('/auth/jwt/create/', {
-      email,
-      password,
-    });
+    const response = await apiClient.post(
+      '/auth/jwt/create/',
+      {
+        email,
+        password,
+      },
+      { idempotencyKey: generateIdempotencyKey() }
+    );
 
     const { access, refresh } = response.data;
     localStorage.setItem('access_token', access);

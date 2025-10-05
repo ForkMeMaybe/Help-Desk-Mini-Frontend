@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-import apiClient from "../api/client";
+import apiClient, { generateIdempotencyKey } from "../api/client";
 import Layout from "../components/Layout";
 import { useAuth } from "../context/AuthContext";
 import {
@@ -56,6 +56,7 @@ const TicketDetail = () => {
   const [loading, setLoading] = useState(true);
   const [commentText, setCommentText] = useState("");
   const [submittingComment, setSubmittingComment] = useState(false);
+  const [commentKey, setCommentKey] = useState(() => generateIdempotencyKey());
 
   useEffect(() => {
     fetchTicket();
@@ -178,10 +179,15 @@ const TicketDetail = () => {
 
     setSubmittingComment(true);
     try {
-      await apiClient.post(`/api/tickets/${id}/comments/`, {
-        text: commentText,
-      });
+      await apiClient.post(
+        `/api/tickets/${id}/comments/`,
+        {
+          text: commentText,
+        },
+        { idempotencyKey: commentKey }
+      );
       setCommentText("");
+      setCommentKey(generateIdempotencyKey());
       fetchTicket();
       toast.success("Comment added successfully");
     } catch (error) {

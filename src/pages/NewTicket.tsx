@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import apiClient from '../api/client';
+import apiClient, { generateIdempotencyKey } from '../api/client';
 import Layout from '../components/Layout';
 import { ArrowLeft } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
@@ -11,6 +11,7 @@ const NewTicket = () => {
   const [description, setDescription] = useState('');
   const [priority, setPriority] = useState('Medium');
   const [loading, setLoading] = useState(false);
+  const [ticketKey] = useState(() => generateIdempotencyKey());
   const navigate = useNavigate();
   const { isAgent, isAdmin } = useAuth();
 
@@ -26,11 +27,7 @@ const NewTicket = () => {
           description,
           priority,
         },
-        {
-          headers: {
-            'Idempotency-Key': crypto.randomUUID(),
-          },
-        },
+        { idempotencyKey: ticketKey }
       );
       toast.success('Ticket created successfully!');
       navigate(`/tickets/${response.data.id}`);

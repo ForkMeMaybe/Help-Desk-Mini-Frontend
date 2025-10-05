@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import apiClient from '../api/client';
+import apiClient, { generateIdempotencyKey } from '../api/client';
 import { Ticket, Mail, Lock, User as UserIcon, ChevronsRight } from 'lucide-react';
 
 const Register = () => {
@@ -14,6 +14,7 @@ const Register = () => {
     last_name: '',
   });
   const [loading, setLoading] = useState(false);
+  const [registerKey] = useState(() => generateIdempotencyKey());
   const navigate = useNavigate();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -25,7 +26,7 @@ const Register = () => {
     setLoading(true);
 
     try {
-      await apiClient.post('/auth/users/', formData);
+      await apiClient.post('/auth/users/', formData, { idempotencyKey: registerKey });
       toast.success('Registration successful! Please login.');
       navigate('/login');
     } catch (error: any) {

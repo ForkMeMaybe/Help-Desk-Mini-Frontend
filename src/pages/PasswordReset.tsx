@@ -1,20 +1,21 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { toast } from "react-toastify";
-import apiClient from "../api/client";
+import apiClient, { generateIdempotencyKey } from "../api/client";
 import { Ticket, Mail, ArrowLeft } from "lucide-react";
 
 const PasswordReset = () => {
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [pwResetKey] = useState(() => generateIdempotencyKey());
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     try {
-      await apiClient.post("/auth/users/reset_password/", { email });
+      await apiClient.post("/auth/users/reset_password/", { email }, { idempotencyKey: pwResetKey });
       setSubmitted(true);
       toast.success("Password reset email sent! Check your SPAM and INBOX.");
     } catch (error: any) {
