@@ -1,11 +1,11 @@
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { toast } from 'react-toastify';
-import apiClient from '../api/client';
-import { Ticket, Mail, ArrowLeft } from 'lucide-react';
+import { useState } from "react";
+import { Link } from "react-router-dom";
+import { toast } from "react-toastify";
+import apiClient from "../api/client";
+import { Ticket, Mail, ArrowLeft } from "lucide-react";
 
 const PasswordReset = () => {
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
 
@@ -14,12 +14,12 @@ const PasswordReset = () => {
     setLoading(true);
 
     try {
-      await apiClient.post('/auth/users/reset_password/', { email });
+      await apiClient.post("/auth/users/reset_password/", { email });
       setSubmitted(true);
-      toast.success('Password reset email sent! Check your inbox.');
+      toast.success("Password reset email sent! Check your SPAM and INBOX.");
     } catch (error: any) {
-      console.error('Password reset error:', error);
-      toast.error('Failed to send password reset email. Please try again.');
+      console.error("Password reset error:", error);
+      toast.error("Failed to send password reset email. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -37,7 +37,9 @@ const PasswordReset = () => {
                 <Mail className="h-6 w-6 text-emerald-600" />
               </div>
             </div>
-            <h2 className="mt-4 text-2xl font-bold text-gray-900">Check your email</h2>
+            <h2 className="mt-4 text-2xl font-bold text-gray-900">
+              Check your email
+            </h2>
             <p className="mt-2 text-sm text-gray-600">
               We've sent a password reset link to <strong>{email}</strong>
             </p>
@@ -70,13 +72,17 @@ const PasswordReset = () => {
             Reset Password
           </h2>
           <p className="mt-2 text-sm text-gray-600">
-            Enter your email address and we'll send you a link to reset your password
+            Enter your email address and we'll send you a link to reset your
+            password
           </p>
         </div>
 
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+            <label
+              htmlFor="email"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
               Email Address *
             </label>
             <div className="relative">
@@ -105,7 +111,7 @@ const PasswordReset = () => {
             {loading ? (
               <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
             ) : (
-              'Send reset link'
+              "Send reset link"
             )}
           </button>
 
