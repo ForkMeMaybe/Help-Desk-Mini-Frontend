@@ -366,13 +366,12 @@ const TicketDetail = () => {
                     onChange={(e) => handleStatusChange(e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
-                    <option value="open">Open</option>
-                    <option value="in_progress">In Progress</option>
-                    <option value="resolved">Resolved</option>
-                    <option value="closed">Closed</option>
+                    <option value="Open">Open</option>
+                    <option value="In Progress">In Progress</option>
+                    <option value="Resolved">Resolved</option>
+                    <option value="Closed">Closed</option>
                   </select>
                 </div>
-
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Change Priority
@@ -382,9 +381,9 @@ const TicketDetail = () => {
                     onChange={(e) => handlePriorityChange(e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
-                    <option value="high">High</option>
-                    <option value="medium">Medium</option>
-                    <option value="low">Low</option>
+                    <option value="High">High</option>
+                    <option value="Medium">Medium</option>
+                    <option value="Low">Low</option>
                   </select>
                 </div>
 
@@ -394,26 +393,23 @@ const TicketDetail = () => {
                   </label>
                   {isAdmin ? (
                     <select
-                      value={
-                        agents.find(
-                          (agent) => agent.username === ticket.assigned_to,
-                        )?.id || ""
-                      }
+                      value={ticket.assigned_to || ""}
                       onChange={(e) => handleAssignAgent(e.target.value)}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                     >
                       <option value="">Unassigned</option>
-                      {agents.map((agent) => (
-                        <option key={agent.id} value={agent.id}>
-                          {agent.username}
-                        </option>
-                      ))}
+                      {Array.isArray(agents) &&
+                        agents.map((agent) => (
+                          <option key={agent.id} value={agent.username}>
+                            {agent.username}
+                          </option>
+                        ))}
                     </select>
                   ) : ticket.assigned_to ? (
                     <p className="text-sm text-gray-900 pt-2">{ticket.assigned_to}</p>
                   ) : (
                     <button
-                      onClick={() => handleAssignAgent(String(user?.id))}
+                      onClick={() => handleAssignAgent(user!.username)}
                       className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                     >
                       Assign to Me
