@@ -9,6 +9,7 @@ import PasswordResetConfirm from './pages/PasswordResetConfirm';
 import TicketsDashboard from './pages/TicketsDashboard';
 import NewTicket from './pages/NewTicket';
 import TicketDetail from './pages/TicketDetail';
+import Register from './pages/Register';
 
 function App() {
   return (
@@ -16,6 +17,7 @@ function App() {
       <AuthProvider>
         <Routes>
           <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
           <Route path="/password-reset" element={<PasswordReset />} />
           <Route path="/password/reset/confirm/:uid/:token" element={<PasswordResetConfirm />} />
           <Route

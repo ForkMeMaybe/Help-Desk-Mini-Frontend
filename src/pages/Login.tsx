@@ -102,6 +102,12 @@ const Login = () => {
             </Link>
           </div>
 
+          <div className="text-sm text-center">
+            <Link to="/register" className="font-medium text-emerald-600 hover:text-emerald-500">
+              Don't have an account? Register
+            </Link>
+          </div>
+
           <button
             type="submit"
             disabled={loading}
