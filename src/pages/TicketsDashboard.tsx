@@ -39,7 +39,7 @@ const TicketsDashboard = () => {
 
   useEffect(() => {
     fetchTickets();
-  }, [currentPage, statusFilter, priorityFilter, showBreachedOnly]);
+  }, [currentPage, statusFilter, priorityFilter, showBreachedOnly, searchTerm]);
 
   const fetchTickets = async () => {
     setLoading(true);
@@ -53,6 +53,7 @@ const TicketsDashboard = () => {
       if (statusFilter) params.status = statusFilter;
       if (priorityFilter) params.priority = priorityFilter;
       if (showBreachedOnly) params.is_breached = "true";
+      if (searchTerm) params.search = searchTerm;
 
       const response = await apiClient.get("/api/tickets/", { params });
       setTickets(response.data.results);
@@ -65,10 +66,6 @@ const TicketsDashboard = () => {
       setLoading(false);
     }
   };
-
-  const filteredTickets = tickets.filter((ticket) =>
-    ticket.title.toLowerCase().includes(searchTerm.toLowerCase()),
-  );
 
   const getPriorityColor = (priority: string) => {
     switch (priority.toLowerCase()) {
@@ -204,14 +201,14 @@ const TicketsDashboard = () => {
           <div className="flex justify-center py-12">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600"></div>
           </div>
-        ) : filteredTickets.length === 0 ? (
+        ) : tickets.length === 0 ? (
           <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-12 text-center">
             <p className="text-gray-500">No tickets found</p>
           </div>
         ) : (
           <>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredTickets.map((ticket) => (
+              {tickets.map((ticket) => (
                 <div
                   key={ticket.id}
                   onClick={() => navigate(`/tickets/${ticket.id}`)}
