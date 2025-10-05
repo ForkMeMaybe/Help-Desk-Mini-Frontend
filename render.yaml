@@ -3,7 +3,7 @@ services:
     name: helpdesk-mini-frontend
     runtime: static
     buildCommand: npm install && npm run build
-    publishDirectory: dist
+    staticPublishPath: dist
     routes:
       - type: rewrite
         source: /*
