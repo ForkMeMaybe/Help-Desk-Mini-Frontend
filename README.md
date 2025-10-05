@@ -35,16 +35,19 @@ A modern React-based frontend application for the HelpDesk Mini ticket managemen
 ### Installation
 
 1. Install dependencies:
+
 ```bash
 npm install
 ```
 
 2. Configure the backend API URL in `.env`:
+
 ```
 VITE_API_BASE_URL=http://localhost:8000
 ```
 
 3. Start the development server:
+
 ```bash
 npm run dev
 ```
@@ -83,16 +86,20 @@ src/
 ## Key Features
 
 ### Automatic Token Refresh
+
 The application automatically refreshes expired access tokens using the refresh token, ensuring uninterrupted user experience.
 
 ### Role-Based UI
+
 - **Users**: Can view their tickets and add comments
 - **Agents/Admins**: Can view all tickets, change status, assign agents, and perform all user actions
 
 ### SLA Management
+
 Tickets with breached SLA deadlines are clearly marked with warning indicators throughout the application.
 
 ### Optimistic Locking
+
 When updating tickets, the application includes version numbers to prevent conflicts. If another user has modified the ticket, a friendly notification prompts you to refresh.
 
 ## Environment Variables
@@ -116,7 +123,3 @@ The application expects the following Django REST API endpoints:
 - `POST /api/tickets/:id/comments/` - Add comment
 - `GET /api/tickets/:id/history/` - Get ticket history
 - `GET /api/users/agents/` - List agents
-
-## License
-
-MIT
