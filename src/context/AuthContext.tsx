@@ -4,6 +4,7 @@ import apiClient from '../api/client';
 interface User {
   id: number;
   email: string;
+  username: string;
   role: string;
   first_name: string;
   last_name: string;
@@ -66,8 +67,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const isAuthenticated = !!user;
-  const isAgent = user?.role === 'agent' || user?.role === 'admin';
-  const isAdmin = user?.role === 'admin';
+  const isAgent = user?.role?.toLowerCase() === 'agent' || user?.role?.toLowerCase() === 'admin';
+  const isAdmin = user?.role?.toLowerCase() === 'admin';
 
   return (
     <AuthContext.Provider

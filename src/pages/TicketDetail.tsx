@@ -9,29 +9,22 @@ import {
   Clock,
   User,
   Calendar,
-  AlertCircle,
   MessageSquare,
+  Trash2,
 } from "lucide-react";
-
-interface Agent {
-  id: number;
-  email: string;
-  first_name: string;
-  last_name: string;
-}
 
 interface Comment {
   id: number;
   text: string;
-  created_by: Agent;
+  user: string;
   created_at: string;
 }
 
 interface HistoryEntry {
   id: number;
-  changed_by: Agent;
-  changed_at: string;
-  field_name: string;
+  user: string;
+  timestamp: string;
+  field_changed: string;
   old_value: string;
   new_value: string;
 }
@@ -42,38 +35,42 @@ interface Ticket {
   description: string;
   status: string;
   priority: string;
-  assigned_agent: Agent | null;
-  created_by: Agent;
+  assigned_to: string | null;
+  created_by: string;
   created_at: string;
   updated_at: string;
   version: number;
-  is_breached: boolean;
   sla_deadline: string | null;
 }
 
 const TicketDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { isAgent } = useAuth();
+  const { user, isAgent, isAdmin } = useAuth();
 
   const [ticket, setTicket] = useState<Ticket | null>(null);
   const [comments, setComments] = useState<Comment[]>([]);
   const [history, setHistory] = useState<HistoryEntry[]>([]);
-  const [agents, setAgents] = useState<Agent[]>([]);
+  const [agents, setAgents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [commentText, setCommentText] = useState("");
   const [submittingComment, setSubmittingComment] = useState(false);
 
   useEffect(() => {
     fetchTicket();
-    if (isAgent) {
+    if (isAdmin) {
       fetchAgents();
     }
-  }, [id, isAgent]);
+  }, [id, isAdmin]);
 
   const fetchTicket = async () => {
     try {
       const response = await apiClient.get(`/api/tickets/${id}/`);
+      if (response.data.created_by !== user?.username && !isAgent && !isAdmin) {
+        toast.error("You are not authorized to view this ticket");
+        navigate("/tickets");
+        return;
+      }
       setTicket(response.data);
       setComments(response.data.comments || []);
       setHistory(response.data.history || []);
@@ -87,8 +84,10 @@ const TicketDetail = () => {
 
   const fetchAgents = async () => {
     try {
-      const response = await apiClient.get("/api/users/agents/");
-      setAgents(response.data);
+      const response = await apiClient.get("/api/agents/");
+      if (response.data && Array.isArray(response.data.results)) {
+        setAgents(response.data.results);
+      }
     } catch (error) {
       console.error("Failed to fetch agents:", error);
     }
@@ -109,9 +108,7 @@ const TicketDetail = () => {
       if (error.response?.status === 409) {
         toast.error(
           "This ticket was updated by someone else. Please refresh the page to see the latest changes.",
-          {
-            autoClose: 5000,
-          },
+          { autoClose: 5000 },
         );
       } else {
         toast.error("Failed to update status");
@@ -120,12 +117,36 @@ const TicketDetail = () => {
     }
   };
 
+  const handlePriorityChange = async (newPriority: string) => {
+    if (!ticket) return;
+
+    try {
+      const response = await apiClient.patch(`/api/tickets/${id}/`, {
+        priority: newPriority,
+        version: ticket.version,
+      });
+      setTicket(response.data);
+      setHistory(response.data.history || []);
+      toast.success("Priority updated successfully");
+    } catch (error: any) {
+      if (error.response?.status === 409) {
+        toast.error(
+          "This ticket was updated by someone else. Please refresh the page to see the latest changes.",
+          { autoClose: 5000 },
+        );
+      } else {
+        toast.error("Failed to update priority");
+      }
+      console.error("Failed to update priority:", error);
+    }
+  };
+
   const handleAssignAgent = async (agentId: string) => {
     if (!ticket) return;
 
     try {
       const response = await apiClient.patch(`/api/tickets/${id}/`, {
-        assigned_agent: agentId || null,
+        assigned_to: agentId || null,
         version: ticket.version,
       });
       setTicket(response.data);
@@ -135,9 +156,7 @@ const TicketDetail = () => {
       if (error.response?.status === 409) {
         toast.error(
           "This ticket was updated by someone else. Please refresh the page to see the latest changes.",
-          {
-            autoClose: 5000,
-          },
+          { autoClose: 5000 },
         );
       } else {
         toast.error("Failed to assign agent");
@@ -166,10 +185,38 @@ const TicketDetail = () => {
     }
   };
 
+  const handleDeleteTicket = async () => {
+    if (!ticket) return;
+
+    if (window.confirm("Are you sure you want to delete this ticket?")) {
+      try {
+        await apiClient.delete(`/api/tickets/${id}/`);
+        toast.success("Ticket deleted successfully");
+        navigate("/tickets");
+      } catch (error) {
+        console.error("Failed to delete ticket:", error);
+        toast.error("Failed to delete ticket");
+      }
+    }
+  };
+
+  const handleDeleteComment = async (commentId: number) => {
+    if (!ticket) return;
+
+    if (window.confirm("Are you sure you want to delete this comment?")) {
+      try {
+        await apiClient.delete(`/api/tickets/${id}/comments/${commentId}/`);
+        toast.success("Comment deleted successfully");
+        fetchTicket();
+      } catch (error) {
+        console.error("Failed to delete comment:", error);
+        toast.error("Failed to delete comment");
+      }
+    }
+  };
+
   const getPriorityColor = (priority: string) => {
     switch (priority.toLowerCase()) {
-      case "critical":
-        return "bg-red-100 text-red-800";
       case "high":
         return "bg-orange-100 text-orange-800";
       case "medium":
@@ -196,9 +243,8 @@ const TicketDetail = () => {
     }
   };
 
-  const formatStatus = (status: string) => {
-    return status.replace("_", " ").replace(/\b\w/g, (l) => l.toUpperCase());
-  };
+  const formatStatus = (status: string) =>
+    status.replace("_", " ").replace(/\b\w/g, (l) => l.toUpperCase());
 
   if (loading) {
     return (
@@ -234,6 +280,14 @@ const TicketDetail = () => {
             <h1 className="text-3xl font-bold text-gray-900">{ticket.title}</h1>
             <p className="mt-1 text-sm text-gray-500">Ticket #{ticket.id}</p>
           </div>
+          {isAdmin && (
+            <button
+              onClick={handleDeleteTicket}
+              className="px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700 transition-colors"
+            >
+              Delete Ticket
+            </button>
+          )}
         </div>
 
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
@@ -249,12 +303,6 @@ const TicketDetail = () => {
               >
                 {ticket.priority}
               </span>
-              {ticket.is_breached && (
-                <span className="px-3 py-1 text-sm font-semibold rounded-full bg-red-100 text-red-800 flex items-center">
-                  <AlertCircle className="h-4 w-4 mr-1" />
-                  SLA Breached
-                </span>
-              )}
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -287,9 +335,7 @@ const TicketDetail = () => {
                     Assigned Agent
                   </p>
                   <p className="text-sm text-gray-900">
-                    {ticket.assigned_to
-                      ? `${ticket.assigned_to}`
-                      : "Unassigned"}
+                    {ticket.assigned_to || "Unassigned"}
                   </p>
                 </div>
               </div>
@@ -309,7 +355,7 @@ const TicketDetail = () => {
               )}
             </div>
 
-            {isAgent && (
+            {(isAgent || isAdmin) && (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-gray-200">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -320,10 +366,25 @@ const TicketDetail = () => {
                     onChange={(e) => handleStatusChange(e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
-                    <option value="Open">Open</option>
-                    <option value="In Progress">In Progress</option>
-                    <option value="Resolved">Resolved</option>
-                    <option value="Closed">Closed</option>
+                    <option value="open">Open</option>
+                    <option value="in_progress">In Progress</option>
+                    <option value="resolved">Resolved</option>
+                    <option value="closed">Closed</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Change Priority
+                  </label>
+                  <select
+                    value={ticket.priority}
+                    onChange={(e) => handlePriorityChange(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="high">High</option>
+                    <option value="medium">Medium</option>
+                    <option value="low">Low</option>
                   </select>
                 </div>
 
@@ -331,18 +392,33 @@ const TicketDetail = () => {
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Assign Agent
                   </label>
-                  <select
-                    value={ticket.assigned_agent?.id || ""}
-                    onChange={(e) => handleAssignAgent(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="">Unassigned</option>
-                    {agents.map((agent) => (
-                      <option key={agent.id} value={agent.id}>
-                        {agent.first_name} {agent.last_name} ({agent.email})
-                      </option>
-                    ))}
-                  </select>
+                  {isAdmin ? (
+                    <select
+                      value={
+                        agents.find(
+                          (agent) => agent.username === ticket.assigned_to,
+                        )?.id || ""
+                      }
+                      onChange={(e) => handleAssignAgent(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="">Unassigned</option>
+                      {agents.map((agent) => (
+                        <option key={agent.id} value={agent.id}>
+                          {agent.username}
+                        </option>
+                      ))}
+                    </select>
+                  ) : (
+                    !ticket.assigned_to && (
+                      <button
+                        onClick={() => handleAssignAgent(String(user?.id))}
+                        className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
+                      >
+                        Assign to Me
+                      </button>
+                    )
+                  )}
                 </div>
               </div>
             )}
@@ -358,6 +434,7 @@ const TicketDetail = () => {
           </div>
         </div>
 
+        {/* Comments Section */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
           <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center">
             <MessageSquare className="h-5 w-5 mr-2" />
@@ -379,6 +456,14 @@ const TicketDetail = () => {
                       {new Date(comment.created_at).toLocaleString()}
                     </p>
                   </div>
+                  {isAdmin && (
+                    <button
+                      onClick={() => handleDeleteComment(comment.id)}
+                      className="p-1 rounded-lg hover:bg-gray-100 transition-colors"
+                    >
+                      <Trash2 className="h-4 w-4 text-red-600" />
+                    </button>
+                  )}
                 </div>
                 <p className="mt-2 text-gray-700">{comment.text}</p>
               </div>
@@ -417,6 +502,7 @@ const TicketDetail = () => {
           </form>
         </div>
 
+        {/* Ticket History */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
           <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center">
             <Clock className="h-5 w-5 mr-2" />
