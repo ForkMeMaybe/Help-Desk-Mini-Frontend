@@ -19,11 +19,19 @@ const NewTicket = () => {
     setLoading(true);
 
     try {
-      const response = await apiClient.post('/api/tickets/', {
-        title,
-        description,
-        priority,
-      });
+      const response = await apiClient.post(
+        '/api/tickets/',
+        {
+          title,
+          description,
+          priority,
+        },
+        {
+          headers: {
+            'Idempotency-Key': crypto.randomUUID(),
+          },
+        },
+      );
       toast.success('Ticket created successfully!');
       navigate(`/tickets/${response.data.id}`);
     } catch (error: any) {
