@@ -409,15 +409,15 @@ const TicketDetail = () => {
                         </option>
                       ))}
                     </select>
+                  ) : ticket.assigned_to ? (
+                    <p className="text-sm text-gray-900 pt-2">{ticket.assigned_to}</p>
                   ) : (
-                    !ticket.assigned_to && (
-                      <button
-                        onClick={() => handleAssignAgent(String(user?.id))}
-                        className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
-                      >
-                        Assign to Me
-                      </button>
-                    )
+                    <button
+                      onClick={() => handleAssignAgent(String(user?.id))}
+                      className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    >
+                      Assign to Me
+                    </button>
                   )}
                 </div>
               </div>
