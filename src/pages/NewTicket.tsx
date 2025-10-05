@@ -4,6 +4,7 @@ import { toast } from 'react-toastify';
 import apiClient from '../api/client';
 import Layout from '../components/Layout';
 import { ArrowLeft } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 
 const NewTicket = () => {
   const [title, setTitle] = useState('');
@@ -11,6 +12,7 @@ const NewTicket = () => {
   const [priority, setPriority] = useState('Medium');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const { isAgent, isAdmin } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -94,7 +96,7 @@ const NewTicket = () => {
               <option value="Low">Low</option>
               <option value="Medium">Medium</option>
               <option value="High">High</option>
-              <option value="Critical">Critical</option>
+              {(isAgent || isAdmin) && <option value="Critical">Critical</option>}
             </select>
           </div>
 
