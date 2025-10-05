@@ -9,6 +9,7 @@ import {
   Clock,
   User,
   Calendar,
+  AlertCircle,
   MessageSquare,
   Trash2,
 } from "lucide-react";
@@ -108,7 +109,9 @@ const TicketDetail = () => {
       if (error.response?.status === 409) {
         toast.error(
           "This ticket was updated by someone else. Please refresh the page to see the latest changes.",
-          { autoClose: 5000 },
+          {
+            autoClose: 5000,
+          },
         );
       } else {
         toast.error("Failed to update status");
@@ -132,7 +135,9 @@ const TicketDetail = () => {
       if (error.response?.status === 409) {
         toast.error(
           "This ticket was updated by someone else. Please refresh the page to see the latest changes.",
-          { autoClose: 5000 },
+          {
+            autoClose: 5000,
+          },
         );
       } else {
         toast.error("Failed to update priority");
@@ -141,12 +146,12 @@ const TicketDetail = () => {
     }
   };
 
-  const handleAssignAgent = async (agentId: string) => {
+  const handleAssignAgent = async (agentUsername: string) => {
     if (!ticket) return;
 
     try {
       const response = await apiClient.patch(`/api/tickets/${id}/`, {
-        assigned_to: agentId || null,
+        assigned_to: agentUsername || null,
         version: ticket.version,
       });
       setTicket(response.data);
@@ -156,7 +161,9 @@ const TicketDetail = () => {
       if (error.response?.status === 409) {
         toast.error(
           "This ticket was updated by someone else. Please refresh the page to see the latest changes.",
-          { autoClose: 5000 },
+          {
+            autoClose: 5000,
+          },
         );
       } else {
         toast.error("Failed to assign agent");
@@ -212,6 +219,15 @@ const TicketDetail = () => {
         console.error("Failed to delete comment:", error);
         toast.error("Failed to delete comment");
       }
+    }
+  };
+
+  const handleReply = (comment: Comment) => {
+    const quotedText = `> @${comment.user}: ${comment.text}\n\n`;
+    setCommentText(quotedText);
+    const commentBox = document.getElementById("comment");
+    if (commentBox) {
+      commentBox.focus();
     }
   };
 
@@ -452,14 +468,22 @@ const TicketDetail = () => {
                       {new Date(comment.created_at).toLocaleString()}
                     </p>
                   </div>
-                  {isAdmin && (
+                  <div className="flex items-center space-x-2">
                     <button
-                      onClick={() => handleDeleteComment(comment.id)}
+                      onClick={() => handleReply(comment)}
                       className="p-1 rounded-lg hover:bg-gray-100 transition-colors"
                     >
-                      <Trash2 className="h-4 w-4 text-red-600" />
+                      <MessageSquare className="h-4 w-4 text-gray-600" />
                     </button>
-                  )}
+                    {isAdmin && (
+                      <button
+                        onClick={() => handleDeleteComment(comment.id)}
+                        className="p-1 rounded-lg hover:bg-gray-100 transition-colors"
+                      >
+                        <Trash2 className="h-4 w-4 text-red-600" />
+                      </button>
+                    )}
+                  </div>
                 </div>
                 <p className="mt-2 text-gray-700">{comment.text}</p>
               </div>
