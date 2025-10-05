@@ -1,9 +1,9 @@
 services:
-  - type: static_site
+  - type: web
     name: helpdesk-mini-frontend
-    env: static
+    runtime: static
     buildCommand: npm install && npm run build
-    staticPublishPath: dist
+    publishDirectory: dist
     routes:
       - type: rewrite
         source: /*
